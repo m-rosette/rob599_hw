@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 
-# A fetch control node
+# A laserscan filter node
 #
-# control.py
+# filter_scan.py
 #
 # Marcus Rosette
 #
-# A way to control the fetch robot
+# A way to filter the laser scan to a set threshold in front of the robot
 
 
 import rospy
-import sys
-
 import numpy as np
-import math
 from sensor_msgs.msg import LaserScan
 
 
@@ -27,8 +24,8 @@ class FilteredScan:
         # Robot width
         self.robot_width = 1 # units = meter 
 
-        # Scan angle
-        self.front_scan_angle = 30.0
+        # Horizonal distance of desired scan (halved)
+        self.dist_thresh = 0.5 # units = meter
 
         # Start the subscriber
         rospy.Subscriber('/base_scan', LaserScan, self.laser_callback)
@@ -40,37 +37,23 @@ class FilteredScan:
         self.rate = rospy.Rate(10)
 
     def laser_callback(self, scan_msg):
-        # Extracting relevant information
-        ranges = scan_msg.ranges
-        angle_increment = scan_msg.angle_increment
-        num_scans = len(ranges)
+        # Convert laser ranges to a NumPy array
+        ranges = np.array(scan_msg.ranges)
 
-        # Calculating the index range for the front scans
-        mid_scan = math.ceil(num_scans / 2)
-        boundary_scan = 10
-        front_scans = ranges[mid_scan-boundary_scan:mid_scan+boundary_scan]
-        # instead of truncating the list, make sure its the same size as the original -> making the stuff outside the bounds -inf or +inf
-        
-        # half_width_scans = int(self.robot_width / (2 * scan_msg.angle_increment))
-        # start_index = int((num_scans / 2) - half_width_scans)
-        # end_index = int((num_scans / 2) + half_width_scans)
+        # Arrange the angles in a NumPy array
+        angles = np.arange(scan_msg.angle_min, scan_msg.angle_max, scan_msg.angle_increment)
 
-        # # Extracting front scans
-        # # front_scans = ranges[start_index:end_index]
-        # front_scans = ranges[0:10]
+        # Calculate the x-distance of each laser reading using trigonometry
+        x_dist = ranges * np.sin(angles)
 
-        # Creating a new LaserScan message with only front scans
-        filtered_scan_msg = LaserScan()
-        filtered_scan_msg.header = scan_msg.header
-        filtered_scan_msg.angle_min = scan_msg.angle_min
-        filtered_scan_msg.angle_max = scan_msg.angle_max
-        filtered_scan_msg.angle_increment = angle_increment
-        filtered_scan_msg.range_min = scan_msg.range_min
-        filtered_scan_msg.range_max = scan_msg.range_max
-        filtered_scan_msg.ranges = front_scans
+        # Create a boolean mask for distances exceeding a threshold and set them to Inf
+        ranges[np.abs(x_dist) > self.dist_thresh] = np.inf
 
-        # Publish the filtered scan message
-        self.filtered_scan_pub.publish(filtered_scan_msg)
+        # Update the scan message with the trimmed version
+        scan_msg.ranges = ranges
+
+        # Publish the filtered scan message to a ROS topic
+        self.filtered_scan_pub.publish(scan_msg)
             
         
 if __name__ == '__main__':
