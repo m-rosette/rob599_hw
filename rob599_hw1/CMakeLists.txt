@@ -55,17 +55,17 @@ find_package(catkin REQUIRED COMPONENTS
 #   Rectangle.msg
 # )
 
-# ## Generate services in the 'srv' folder
-# add_service_files(
-#   DIRECTORY srv
-#   FILES Doubler.srv
-# )
+## Generate services in the 'srv' folder
+add_service_files(
+  DIRECTORY srv
+  FILES StoppingDistance.srv
+)
 
-# ## Generate actions in the 'action' folder
-# add_action_files(
-#   DIRECTORY action
-#   FILES Fibonacci.action
-# )
+## Generate actions in the 'action' folder
+add_action_files(
+  DIRECTORY action
+  FILES Approach.action
+)
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(

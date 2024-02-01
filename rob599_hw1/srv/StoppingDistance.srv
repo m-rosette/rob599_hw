@@ -1,0 +1,4 @@
+# StoppingDistance.srv
+float64 stopping_distance
+---
+bool success

@@ -1,0 +1,8 @@
+# goal
+float64 stopping_distance
+---
+# result
+bool success
+---
+# feedback
+float64 feedback_distance
