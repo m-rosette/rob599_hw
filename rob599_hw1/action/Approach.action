@@ -1,8 +1,8 @@
 # goal
-float64 stopping_distance
+float64 number
 ---
 # result
 bool success
 ---
 # feedback
-float64 feedback_distance
+float64 progress

@@ -4,34 +4,47 @@ import rospy
 import actionlib
 from rob599_hw1.msg import ApproachAction, ApproachGoal
 
-def send_approach_goal(stopping_distance):
-    # Initialize the ROS node
-    rospy.init_node('send_approach_goal')
 
-    # Create an action client
-    client = actionlib.SimpleActionClient('approach_action', ApproachAction)
+class RobotActionClient:
+    def __init__(self) -> None:
+        self.action_node = rospy.init_node("action_node")
+        self.client = actionlib.SimpleActionClient('approach_action', ApproachAction)
+        
+    # This callback will be called when the action is complete.
+    def done_callback(self, status, result):
+        # The status argument tells you if the action succeeded.  Sometimes actions that did not succeed can
+        # return partial results.
+        if status == actionlib.GoalStatus.SUCCEEDED:
+            rospy.loginfo('Suceeded with result {0}'.format(result.success))
+        else:
+            rospy.loginfo('Failed with result {0}'.format(result.success))
 
-    # Wait for the action server to start
-    client.wait_for_server()
 
-    # Create a goal
-    goal = ApproachGoal(stopping_distance=stopping_distance)
+    # This callback will be called when the action becomes active on the server.  If the server is
+    # set up to only handle one action at a time, this will let you know when it's actively working
+    # on your action request.
+    def active_callback(self):
+        rospy.loginfo('Action is active')	
 
-    # Send the goal to the action server
-    client.send_goal(goal)
 
-    # Wait for the result
-    client.wait_for_result()
+    # This callback is called every time the server issues a feedback message.
+    def feedback_callback(self, feedback):
+        rospy.loginfo('Feedback: {0}'.format(feedback.progress))
 
-    # Print the result
-    print(f"Result: {client.get_result()}")
+    def main(self, stopping_distance):
+        self.client.wait_for_server()
+        goal = ApproachGoal(number=stopping_distance)
+        self.client.send_goal(goal, done_cb=self.done_callback, active_cb=self.active_callback, feedback_cb=self.feedback_callback)
+        self.client.wait_for_result()
+        
 
 if __name__ == '__main__':
-    try:
-        # Specify the stopping distance for the goal
-        stopping_distance_goal = 0.5
+    # Specify the stopping distance for the goal
+    stopping_distance_goal = 0.25
 
-        # Send the approach goal
-        send_approach_goal(stopping_distance_goal)
+    rob_action = RobotActionClient()
+
+    try:
+        rob_action.main(stopping_distance_goal)
     except rospy.ROSInterruptException:
         pass
