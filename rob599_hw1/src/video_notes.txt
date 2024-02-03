@@ -1,0 +1,25 @@
+Marcus Rosette
+02/02/2023
+ROB 599
+Homework 1
+
+
+
+1. I start by launching the fetch simulation in Gazebo
+
+    1.1 I turned off gravity at the wrist so it did not effect the laserscan readings 
+
+2. Next, I start Rviz to visualize each of the topics I have implemented 
+
+3. Then I launch wall_stare.launch
+
+    3.1 This will bring up the robot_approach node that will have fetch approach the wall that is in front of it and stop 1m away from it
+
+    3.2 This will also bring up the filtered_scan node that filters the laserscans to only display points directly in front of fetch
+
+    3.3 Lastly, this will bring up the wall_angle node that displays in Rviz the resultant estimated angle of the wall relative to fetch
+
+4. Next I will test the stopping_distance service to demonstrate its functionality in setting a new distance threshold for approaching a wall
+
+5. Next, I will test the action interface that will also demonstrate the functionality of setting a new distance threshold for approaching a wall
+

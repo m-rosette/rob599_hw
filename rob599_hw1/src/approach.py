@@ -2,7 +2,7 @@
 
 # A fetch control node
 #
-# control.py
+# approach.py
 #
 # Marcus Rosette
 #
@@ -10,7 +10,6 @@
 
 
 import rospy
-import sys
 import actionlib
 from time import sleep
 from sensor_msgs.msg import LaserScan
@@ -43,7 +42,8 @@ class RobotApproach:
         self.shortest_scan = None
 
         # Start the subscriber
-        rospy.Subscriber('/base_scan', LaserScan, self.laser_callback)
+        # rospy.Subscriber('/base_scan', LaserScan, self.laser_callback)
+        rospy.Subscriber('/filtered_scan', LaserScan, self.laser_callback)
         
         # Start the publisher
         self.cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
@@ -184,12 +184,10 @@ class RobotApproach:
         text_marker.color.a = 1.0
         text_marker.scale.z = 0.25  # Text size
 
-        # Set text marker position and content
-        # Calculate the midpoint between robot and contact point
-        midpoint = Point()
-        midpoint.x = contact_point.x
-        midpoint.y = contact_point.y
-        midpoint.z = contact_point.z
+        # Set text marker position at the contact point
+        text_marker.pose.position.x = contact_point.x
+        text_marker.pose.position.y = contact_point.y
+        text_marker.pose.position.z = 0.25
         text_marker.text = f"Shortest distance: {self.shortest_scan:.2f} meters"
 
         marker_array.markers.append(text_marker)

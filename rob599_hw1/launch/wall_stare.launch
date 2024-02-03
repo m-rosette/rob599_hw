@@ -4,7 +4,6 @@
 	Marcus Rosette
 -->
 
-
 <launch>
 
 	<!-- Start a publisher node to move the robot -->
@@ -12,5 +11,8 @@
 
 	<!-- Start the filter_scan node to filter the LaserScan messages -->
 	<node pkg="rob599_hw1" name="filter_scan" type="filter_scan.py" />
+
+	<!-- Start the wall_angle node to determine the angle of the wall -->
+	<node pkg="rob599_hw1" name="wall_angle" type="wall_angle.py" />
 
 </launch>
