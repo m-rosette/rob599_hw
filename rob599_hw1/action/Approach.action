@@ -1,8 +1,0 @@
-# goal
-float64 number
----
-# result
-bool success
----
-# feedback
-float64 progress

@@ -1,4 +1,4 @@
-devel/
+install/
 logs/
 build/
 bin/
@@ -8,6 +8,5 @@ srv_gen/
 
 *.pyc
 
-# Catkin custom files
-CATKIN_IGNORE
+rob599_hw2/rob599_hw2/scratch.py
 
