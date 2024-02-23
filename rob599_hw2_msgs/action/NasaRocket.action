@@ -1,0 +1,8 @@
+# goal
+int64 time_till_launch
+---
+# result
+string result
+---
+# feedback
+int64 countdown

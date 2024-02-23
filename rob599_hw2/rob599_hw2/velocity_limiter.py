@@ -41,14 +41,17 @@ class VelocityLimiter(Node):
 		self.brake_check = False
 
 	def velocity_callback(self, msg):
+		""" Caps the Twist messages if braking is disabled """
+		# Get the currect time of recieving a Twist message
 		self.last_twist_time = self.get_clock().now().nanoseconds
-		# self.get_logger().info(f"Current time: {self.last_twist_time.nanoseconds / 1e9}")
- 
-		msg = self.limit_velocity(msg)
 
-		# self.get_logger().info(f"Got velocity: {msg}")
+		# If not braking, cap the Twist values to their set max parameters
+		if not self.brake_check:
+			msg = self.limit_velocity(msg)
+			self.vel_pub.publish(msg)
 
 	def timer_callback(self):
+		""" Watchdog timer to catch any missed Twist messages during set period of time """
 		with_watchdog = self.get_parameter('with_watchdog').get_parameter_value().bool_value
 		watchdog_period = self.get_parameter('watchdog_period').get_parameter_value().double_value
 
@@ -59,6 +62,7 @@ class VelocityLimiter(Node):
 				self.vel_pub.publish(zero_twist)
 
 	def limit_velocity(self, msg):
+		""" Limit the Twist values to the set parameters for linear and angluar velocity """
 		linear_max = self.get_parameter('linear_max').get_parameter_value().double_value
 		angular_max = self.get_parameter('angular_max').get_parameter_value().double_value
 
@@ -74,6 +78,7 @@ class VelocityLimiter(Node):
 		return msg
 	
 	def braking_service_callback(self, request, response):
+		""" Controls the service by a stored bool for whether braking is happening or not """
 		if request.status:
 			self.get_logger().info("Applying Brakes")
 			self.brake_check = True
@@ -85,6 +90,7 @@ class VelocityLimiter(Node):
 		return response
 			
 	def braking_timer_callback(self):
+		""" Sends a zero Twist message if braking is set to True """
 		if self.brake_check:
 			self.get_logger().info("Braking - Publishing a Zero Twist")
 			zero_twist = Twist()

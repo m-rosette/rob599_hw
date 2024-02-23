@@ -27,6 +27,7 @@ class BrakingServiceClient(Node):
             self.get_logger().info('Waiting for service to start')
 
     def send_request(self, braking_status):
+        """ Sends the request for braking """
         request = ApplyBrakes.Request()
         request.status = braking_status
 

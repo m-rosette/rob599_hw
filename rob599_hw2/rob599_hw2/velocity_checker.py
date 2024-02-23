@@ -32,6 +32,7 @@ class VelocityChecker(Node):
 		self.msg_count = 0
 
 	def velocity_callback(self, msg):
+		""" Reads Twist messages and counts if they are over the value threshold """
 		linear_max_check = self.get_parameter('linear_max_check').get_parameter_value().double_value
 		angular_max_check = self.get_parameter('angular_max_check').get_parameter_value().double_value
         
@@ -53,9 +54,9 @@ class VelocityChecker(Node):
 		if np.abs(linear_x) > linear_max_check or np.abs(linear_y) > linear_max_check or np.abs(linear_z) > linear_max_check \
 			or np.abs(angular_x) > angular_max_check or np.abs(angular_y) > angular_max_check or np.abs(angular_z) > angular_max_check:
 			self.exceeded_count += 1
-        	
 
 	def timer_callback(self):
+		""" Logs the number of messages recieved and the number that exceeded the value threshold """
 		# Log the counts
 		self.get_logger().info(f"Recieved {self.msg_count} total messages and {self.exceeded_count} were over the limit")
 		
