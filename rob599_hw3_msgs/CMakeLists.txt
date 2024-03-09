@@ -17,7 +17,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/ClearPositions.srv"
   "srv/Save.srv"
   "srv/Load.srv"
+  "srv/KnockKnock.srv"
   "action/GoTo.action"
+  "action/Patrol.action"
   )
 
 if(BUILD_TESTING)

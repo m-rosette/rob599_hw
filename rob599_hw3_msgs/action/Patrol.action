@@ -1,0 +1,8 @@
+# goal - leaving this empty since all positions will be visited
+---
+# result
+string outcome
+---
+# feedback
+string current_position
+float64 distance_to_goal

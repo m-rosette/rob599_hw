@@ -12,8 +12,8 @@ from ament_index_python.packages import get_package_share_directory
 from nav2_msgs.action import ComputePathToPose
 from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
 
-from rob599_hw3_msgs.srv import MemorizePosition, ClearPositions, Save, Load
-from rob599_hw3_msgs.action import GoTo
+from rob599_hw3_msgs.srv import MemorizePosition, ClearPositions, Save, Load, KnockKnock
+from rob599_hw3_msgs.action import GoTo, Patrol
 
 
 class Places(Node):
@@ -41,12 +41,21 @@ class Places(Node):
         self.load_places_srv = self.create_service(
             Load, 'load_places', self.load_places_callback)
         
+        self.knock_knock_srv = self.create_service(
+            KnockKnock, 'knock_knock', self.knock_knock_callback)
+        
         # Actions server
         self.go_to_action_server = ActionServer(
             self,
             GoTo,
             'go_to',
             execute_callback=self.go_to_callback)
+        
+        self.patrol_server = ActionServer(
+            self,
+            Patrol,
+            'patrol',
+            execute_callback=self.patrol_callback)
         
         # Setup storage directory
         self.storage_dir = os.path.join(
@@ -256,6 +265,72 @@ class Places(Node):
 
         # Return result
         return GoTo.Result(outcome="Reached destination.")
+    
+    def patrol_callback(self, goal_handle):
+        self.get_logger().info("Received patrol request")
+        feedback_msg = Patrol.Feedback()
+        result_msg = Patrol.Result()
+
+        for position_name, pose_stamped in self.positions.items():
+            if goal_handle.is_cancel_requested:
+                result_msg.outcome = 'Patrol cancelled'
+                goal_handle.canceled()
+                return result_msg
+
+            self.get_logger().info(f"Patrolling to {position_name}")
+            feedback_msg.current_position = position_name
+
+            # Execute the goal (replace this with your actual execution logic)
+            self.navigator.goToPose(pose_stamped)
+
+            # Loop until goal is reached or cancelled
+            while not self.navigator.isTaskComplete():
+                if goal_handle.is_cancel_requested:
+                    result_msg.outcome = 'Patrol cancelled'
+                    goal_handle.canceled()
+                    return result_msg
+                
+                # Get current position from robot for feedback
+                current_feedback = self.navigator.getFeedback()
+                feedback_msg.distance_to_goal = float(current_feedback.distance_remaining)
+
+                # Publish feedback
+                goal_handle.publish_feedback(feedback_msg)
+                time.sleep(0.1)  # Sleep for 1 second before checking again
+
+            # Publish next position
+            next_position_name = "Next position"
+            feedback_msg.current_position = next_position_name
+            goal_handle.publish_feedback(feedback_msg)
+
+        result_msg.outcome = 'Patrol completed'
+        goal_handle.succeed()
+        return result_msg
+    
+    def knock_knock_callback(self, request, response):
+        # Preempt any ongoing action
+        self.navigator.cancelTask()
+
+        # Navigate to the front door
+        front_door_pose = self.positions.get('front_door')
+        if front_door_pose:
+            self.navigator.goToPose(front_door_pose)
+            while not self.navigator.isTaskComplete():
+                response.message = "Checking front door"
+
+            # Check if navigation succeeded
+            result = self.navigator.getResult()
+            if result == TaskResult.SUCCEEDED:
+                response.success = True
+                response.message = "Arrived at the front door."
+            else:
+                response.success = False
+                response.message = "Failed to reach the front door."
+        else:
+            response.success = False
+            response.message = "Front door position not found."
+
+        return response
 
 
 def main(args=None):

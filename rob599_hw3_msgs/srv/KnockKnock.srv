@@ -1,0 +1,5 @@
+# Define the KnockKnock service
+# input - leaving it empty
+---
+bool success    # Response: indicates if the service call was successful
+string message  # Response: provides a message describing the outcome
