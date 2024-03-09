@@ -17,7 +17,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/ClearPositions.srv"
   "srv/Save.srv"
   "srv/Load.srv"
-  # "action/NasaRocket.action"
+  "action/GoTo.action"
   )
 
 if(BUILD_TESTING)

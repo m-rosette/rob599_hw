@@ -1,5 +1,6 @@
 import rclpy
 from rclpy.node import Node
+from rclpy.action import ActionServer
 from geometry_msgs.msg import PoseStamped
 from visualization_msgs.msg import Marker
 from std_srvs.srv import Empty
@@ -8,6 +9,8 @@ import yaml
 import os
 import time
 from ament_index_python.packages import get_package_share_directory
+from nav2_msgs.action import ComputePathToPose
+from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
 
 from rob599_hw3_msgs.srv import MemorizePosition, ClearPositions, Save, Load
 from rob599_hw3_msgs.action import GoTo
@@ -38,11 +41,12 @@ class Places(Node):
         self.load_places_srv = self.create_service(
             Load, 'load_places', self.load_places_callback)
         
-        # Actions
-        self.go_to_action_server = self.create_action_server(
+        # Actions server
+        self.go_to_action_server = ActionServer(
+            self,
             GoTo,
             'go_to',
-            self.go_to_callback)
+            execute_callback=self.go_to_callback)
         
         # Setup storage directory
         self.storage_dir = os.path.join(
@@ -52,6 +56,7 @@ class Places(Node):
         # Initialize tf2
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
+        self.navigator = BasicNavigator()
 
     def memorize_position_callback(self, request, response):
         position_name = request.position_name
@@ -176,6 +181,7 @@ class Places(Node):
             with open(os.path.join(self.storage_dir, request.filename + '.yaml'), 'r') as file:
                 yaml_data = yaml.safe_load(file)
                 for position_name, data in yaml_data.items():
+                    # Extract pose data from yaml
                     pose_stamped = PoseStamped()
                     pose_stamped.header.stamp.sec = data['header']['stamp']['sec']
                     pose_stamped.header.stamp.nanosec = data['header']['stamp']['nanosec']
@@ -187,6 +193,9 @@ class Places(Node):
                     pose_stamped.pose.orientation.y = data['pose']['orientation']['y']
                     pose_stamped.pose.orientation.z = data['pose']['orientation']['z']
                     pose_stamped.pose.orientation.w = data['pose']['orientation']['w']
+
+                    # Save loaded positions
+                    self.positions[position_name] = pose_stamped
                     
                     # Publish marker for loaded position
                     self.publish_marker(position_name, pose_stamped)
@@ -205,36 +214,48 @@ class Places(Node):
         return response
     
     def go_to_callback(self, goal_handle):
-        position_name = goal_handle.request.position_name
-        if position_name not in self.positions:
-            goal_handle.abort()
-            return GoTo.Result(outcome=f"Position '{position_name}' not found.")
+        self.get_logger().info(f"Goal recieved with name: {goal_handle.request.position_name}")
 
-        goal_pose = self.positions[position_name]
+        goal_name = goal_handle.request.position_name
+
+        if goal_name not in self.positions:
+            self.get_logger().warn(f"Goal position '{goal_name}' not found")
+            goal_handle.abort()
+            return GoTo.Result(outcome=f"Position '{goal_name}' not found.")
+
+        goal_pose = self.positions[goal_name]
         current_pose = self.get_current_robot_pose()
         if current_pose is None:
+            self.get_logger().error("Failed to get current robot pose")
             goal_handle.abort()
             return GoTo.Result(outcome="Failed to get current robot pose.")
 
-        # Calculate distance to goal
-        distance_to_goal = self.calculate_distance(current_pose, goal_pose)
+        # control robot to goal using BasicNavigator
+        self.get_logger().info(f"Executing goal to '{goal_name}'")
+        self.navigator.goToPose(goal_pose)
 
-        # Publish feedback
-        feedback_msg = GoTo.Feedback(distance_to_goal=distance_to_goal)
-        goal_handle.publish_feedback(feedback_msg)
+        # publish feedback until we're done
+        while rclpy.ok() and not self.navigator.isTaskComplete():
+            current_feedback = self.navigator.getFeedback()
+            feedback_msg = GoTo.Feedback(distance_to_goal=float(current_feedback.distance_remaining))
+            goal_handle.publish_feedback(feedback_msg)
+            time.sleep(0.1)  # Adjust sleep duration as needed
 
-        # Simulating some action (e.g., moving the robot)
-        # Replace this with your actual robot control code
+        # process
+        result = self.navigator.getResult()
+        if result == TaskResult.SUCCEEDED:
+            result.outcome = 'Goal succeeded!'
+        elif result == TaskResult.CANCELED:
+            result.outcome = 'Goal was canceled!'
+        elif result == TaskResult.FAILED:
+            result.outcome = 'Goal failed!'
+
+        # Set goal outcome
+        goal_handle.succeed()
+        self.get_logger().info("Goal completed successfully")
 
         # Return result
         return GoTo.Result(outcome="Reached destination.")
-
-    def calculate_distance(self, pose1, pose2):
-        # Calculate distance between two poses (e.g., Euclidean distance)
-        # Replace this with your actual distance calculation code
-        return 0.0  # Dummy value for demonstration purposes
-
-
 
 
 def main(args=None):
