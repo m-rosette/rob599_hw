@@ -1,0 +1,6 @@
+# Service definition to clear rviz2 markers
+bool clear               # clears markers
+---
+# outputs
+bool success              # Indicates whether the places were successfully loaded
+string message           # Additional information/message regarding the success or failure

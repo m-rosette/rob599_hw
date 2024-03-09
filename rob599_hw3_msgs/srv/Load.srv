@@ -1,0 +1,5 @@
+# Service definition to load named places from a file
+string filename          # Filepath to load the places from
+---
+bool success             # Indicates whether the places were successfully loaded
+string message           # Additional information/message regarding the success or failure

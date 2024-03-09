@@ -1,0 +1,5 @@
+# Service definition to memorize a robot position
+string position_name      # Name of the position to memorize
+---
+bool success             # Indicates whether the position was successfully memorized
+string message           # Additional information/message regarding the success or failure

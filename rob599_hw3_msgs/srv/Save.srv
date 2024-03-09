@@ -1,0 +1,5 @@
+# Service definition to save named places to a file
+string filename          # Filepath to save the places to
+---
+bool success             # Indicates whether the places were successfully saved
+string message           # Additional information/message regarding the success or failure
