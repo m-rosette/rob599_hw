@@ -7,11 +7,11 @@ This homework interfaces with the turtlebot3 and nav2 packages. Generating a SLA
 
 ### Package installation
 
-To interact with this package first follow the [turtlebot3 installation instructions](https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/)
+1. To interact with this package first follow the [turtlebot3 installation instructions](https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/)
 
-For the purposes of this assignment, the **burger** turtlebot3 model will be used
+2. For the purposes of this assignment, the **burger** turtlebot3 model will be used
 
-Clone this repo into your ros2_ws by running
+3. Clone this repo into your ros2_ws by running
 ```bash
 cd ros2_ws/src/
 git clone $this-repo$
@@ -22,18 +22,18 @@ colcon build
 
 ### Generating a SLAM map
 
-To start generating a SLAM map of the turtlebot3 house environment, launch
+1. To start generating a SLAM map of the turtlebot3 house environment, launch
 ```bash
 ros2 launch rob599_hw3 turtlebot3_slam_launch.py
 ```
 
-Generate a more detailed map by having the robot traverse the environment by teleoperating around the house
+2. Generate a more detailed map by having the robot traverse the environment by teleoperating around the house
 ```bash
 export TURTLEBOT3_MODEL=burger
 ros2 run turtlebot3_teleop teleop_keyboard 
 ```
 
-The generated map can be saved by running
+3. The generated map can be saved by running
 ```bash
 ros2 run nav2_map_server map_saver_cli -f ~/map
 ```
