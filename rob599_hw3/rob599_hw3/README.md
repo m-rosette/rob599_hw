@@ -48,7 +48,7 @@ ros2 launch rob599_hw3 turtlebot3_nav_launch.py
 
 2. Provide a *2D Pose Estimate* for the nav-stack by clicking on the pre-generated coordinate frame
 
-3. To bagin saving poses, start the places node by running
+3. To begin saving poses, start the places node by running
 ```bash
 ros2 run rob599_hw3 places 
 ```
